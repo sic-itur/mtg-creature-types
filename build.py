@@ -262,7 +262,7 @@ def build_html():
       <tr>
         <th data-key="type">Creature Type <span class="sortHint" id="sh_type"></span></th>
         <th data-key="count" class="num">Count <span class="sortHint" id="sh_count"></span></th>
-        <th data-key="colours">Colours <span class="sortHint" id="sh_colours"></span></th>
+        <th data-key="colours">Colour Identities <span class="sortHint" id="sh_colours"></span></th>
         <th data-key="W" class="mana"><span class="manaLabel"><img class="manaHeadIcon" src="./assets/mana/W.svg" alt="W" title="White">White</span></th>
         <th data-key="U" class="mana"><span class="manaLabel"><img class="manaHeadIcon" src="./assets/mana/U.svg" alt="U" title="Blue">Blue</span></th>
         <th data-key="B" class="mana"><span class="manaLabel"><img class="manaHeadIcon" src="./assets/mana/B.svg" alt="B" title="Black">Black</span></th>
