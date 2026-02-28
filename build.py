@@ -10,6 +10,7 @@ OUT_DIR.mkdir(parents=True, exist_ok=True)
 
 SCRY_BULK = "https://api.scryfall.com/bulk-data"
 MANA_ORDER = ["W", "U", "B", "R", "G", "C"]
+EXTRA_LAYOUTS = { "token", "double_faced_token", "emblem", "vanguard", "scheme", "plane", "phenomenon", }
 
 def get_oracle_cards_download_uri() -> str:
     r = requests.get(SCRY_BULK, timeout=60)
@@ -63,6 +64,19 @@ def main():
     allowed_types = get_creature_type_allowlist()
 
     for card in cards_iter:
+        games = card.get("games") or []
+        if "paper" not in games:
+            continue
+      
+        if card.get("layout") in EXTRA_LAYOUTS:
+            continue
+        # excludes cards from "memorabilia" sets
+        if card.get("set_type") == "memorabilia":
+            continue
+        # excludes un-/funny cards
+        if card.get("set_type") == "funny" or card.get("funny") is True:
+            continue
+        
         # determines if this card has any creature face at all
         creature_faces = iter_creature_faces(card)
         if not creature_faces:
@@ -139,6 +153,18 @@ def build_html():
       color: var(--text);
       font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
     }
+    html::-webkit-scrollbar {
+    width: 14px;
+    }
+    html::-webkit-scrollbar-track {
+        background: transparent;
+    }
+    html::-webkit-scrollbar-thumb {
+        background: #394154;
+        border-radius: 999px;
+        border: 3px solid transparent;
+        background-clip: content-box;
+    }
     h1 { font-size: 1.35rem; margin: 0 0 0.375rem; }
     .sub { font-size: 0.9rem; color: var(--muted); margin: 0 0 1rem; line-height: 1.4; }
     .bar {
@@ -185,6 +211,7 @@ def build_html():
       font-size: 0.875rem;
     }
     tbody tr:hover { background: var(--panel2); }
+    tbody tr:last-child td { border-bottom: 0; }
     .num { font-variant-numeric: tabular-nums; }
     a { color: var(--link); text-decoration: none; }
     a:hover { text-decoration: underline; }
@@ -240,7 +267,7 @@ def build_html():
 const MANA = ["W","U","B","R","G","C"];
 
 function scryNoncreatureSupport(t) {
-  const q = encodeURIComponent(`o:${t} -t:creature`);
+  const q = encodeURIComponent(`o:${t} -t:${t}`);
   return `https://scryfall.com/search?as=grid&order=name&q=${q}`;
 }
 
@@ -274,6 +301,16 @@ function colourCellHTML(row, c) {
 function render(rows) {
   const tbody = document.getElementById("tbody");
   tbody.innerHTML = "";
+
+  const COLS = 11; // type, count, colours, W, U, B, R, G, C, legendaries, support
+
+  if (!rows || rows.length === 0) {
+    const q = (document.getElementById("filter")?.value || "").trim();
+    const msg = q ? `No matches for “${q}”.` : "No data.";
+    renderEmptyRow(tbody, COLS, msg);
+    return;
+  }
+
   for (const row of rows) {
     const tr = document.createElement("tr");
     tr.innerHTML = `
@@ -325,6 +362,12 @@ function sortRows(rows, key, dir) {
 
     return ((a[key] || 0) - (b[key] || 0)) * mult;
   });
+}
+
+function renderEmptyRow(tbody, colCount, message) {
+  const tr = document.createElement("tr");
+  tr.innerHTML = `<td class="cellMuted" colspan="${colCount}">${message}</td>`;
+  tbody.appendChild(tr);
 }
 
 async function main() {
