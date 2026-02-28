@@ -12,14 +12,13 @@ SCRY_BULK = "https://api.scryfall.com/bulk-data"
 MANA_ORDER = ["W", "U", "B", "R", "G", "C"]
 EXTRA_LAYOUTS = { "token", "double_faced_token", "emblem", "vanguard", "scheme", "plane", "phenomenon", }
 
-def get_oracle_cards_download_uri() -> str:
+def get_default_cards_download_uri() -> str:
     r = requests.get(SCRY_BULK, timeout=60)
     r.raise_for_status()
-    items = r.json()["data"]
-    for it in items:
-        if it.get("type") == "oracle_cards" or it.get("name") == "Oracle Cards":
+    for it in r.json()["data"]:
+        if it.get("type") == "default_cards" or it.get("name") == "Default Cards":
             return it["download_uri"]
-    raise RuntimeError("Could not find Oracle Cards bulk data item.")
+    raise RuntimeError("Could not find Default Cards bulk data item.")
 
 def get_creature_type_allowlist() -> set[str]:
     r = requests.get("https://api.scryfall.com/catalog/creature-types", timeout=60)
@@ -50,7 +49,7 @@ def iter_creature_faces(card: dict) -> list[dict]:
     return [card] if is_creature_type_line(card.get("type_line", "")) else []
 
 def main():
-    uri = get_oracle_cards_download_uri()
+    uri = get_default_cards_download_uri()
     resp = requests.get(uri, stream=True, timeout=180)
     resp.raise_for_status()
     resp.raw.decode_content = True
@@ -63,6 +62,8 @@ def main():
 
     allowed_types = get_creature_type_allowlist()
 
+    seen_oracle_ids = set()
+    
     for card in cards_iter:
         games = card.get("games") or []
         if "paper" not in games:
@@ -70,17 +71,30 @@ def main():
       
         if card.get("layout") in EXTRA_LAYOUTS:
             continue
-        # excludes cards from "memorabilia" sets
+        
         if card.get("set_type") == "memorabilia":
             continue
-        # excludes un-/funny cards
-        if card.get("set_type") == "funny" or card.get("funny") is True:
+        
+        # excluded card types
+        if card.get("set_type") == "funny":
+          leg = (card.get("legalities") or {}).get("legacy")
+          vin = (card.get("legalities") or {}).get("vintage")
+          if leg == "not_legal" and vin == "not_legal":
+              continue
+        if card.get("security_stamp") == "acorn":
+            continue
+        if card.get("set") == "mb2":
             continue
         
         # determines if this card has any creature face at all
         creature_faces = iter_creature_faces(card)
         if not creature_faces:
             continue
+        
+        oid = card.get("oracle_id") or card.get("id")
+        if oid in seen_oracle_ids:
+            continue
+        seen_oracle_ids.add(oid)
 
         # uses overall card color_identity (shared across faces)
         ci = card.get("color_identity") or []
@@ -143,7 +157,6 @@ def build_html():
       --text: #f2f2f2;
       --muted: #aab1bf;
       --link: #9ccfff;
-      --pill: #141822;
       --shadow: rgba(0,0,0,0.35);
       --radius: 0.75rem;
     }
@@ -267,13 +280,13 @@ def build_html():
 const MANA = ["W","U","B","R","G","C"];
 
 function scryCreatureType(t) {
-  const q = encodeURIComponent(`t:creature t:${t} -is:funny`);
-  return `https://scryfall.com/search?as=grid&order=name&q=${q}`;
+  const q = encodeURIComponent(`t:creature t:${t} in:paper -is:funny`);
+  return `https://scryfall.com/search?as=grid&order=name&q=${q}&unique=cards`;
 }
 
 function scryNoncreatureSupport(t) {
-  const q = encodeURIComponent(`o:${t} -t:${t} -is:funny`);
-  return `https://scryfall.com/search?as=grid&order=name&q=${q}`;
+  const q = encodeURIComponent(`o:${t} -t:${t} in:paper -is:funny`);
+  return `https://scryfall.com/search?as=grid&order=name&q=${q}&unique=cards`;
 }
 
 function pctStr(p) {
@@ -358,8 +371,6 @@ function sortRows(rows, key, dir) {
       return ((a.colourCounts[key] || 0) - (b.colourCounts[key] || 0)) * mult;
     }
 
-    if (key === "support") return a.type.localeCompare(b.type) * mult;
-
     return ((a[key] || 0) - (b[key] || 0)) * mult;
   });
 }
@@ -410,8 +421,8 @@ async function main() {
   document.getElementById("footer").innerHTML = `
     <div><b>Notes:</b></div>
     <div>• Counts/colours/legendaries are computed from <b>creature faces only</b> (<code>t:creature</code>) and use colour identity for the colour breakdown.</div>
-    <div>• Creature types are limited to Scryfall’s official <a href="https://scryfall.com/docs/api/catalogs/creature-types">creature-types</a> catalog based on current Oracle data.</div>
-    <div>• The “Support Cards” column uses <code>o:TYPE -t:creature</code> to find relevant instants/enchantments/etc.</div>
+    <div>• Counts are best-effort and based on Scryfall bulk data + the official <a href="https://scryfall.com/docs/api/catalogs/creature-types">creature-types</a>; some edge cases and errata quirks may cause occasional mismatches.</div>
+    <div>• The <b>Support Cards</b> column uses <code>o:TYPE -t:creature in:paper</code> to find relevant instants/enchantments/etc.</div>
   `;
 
   rerender();
