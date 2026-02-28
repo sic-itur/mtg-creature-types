@@ -72,10 +72,11 @@ def main():
         if card.get("layout") in EXTRA_LAYOUTS:
             continue
         
+        # excluded card types
         if card.get("set_type") == "memorabilia":
             continue
-        
-        # excluded card types
+        if card.get("funny") is True:
+            continue
         if card.get("set_type") == "funny":
           leg = (card.get("legalities") or {}).get("legacy")
           vin = (card.get("legalities") or {}).get("vintage")
@@ -236,6 +237,8 @@ def build_html():
     thead th.noSort { cursor: default; }
     .colourIcons { display: flex; gap: 0.375rem; align-items: center; }
     .colourIcons img { width: 1rem; height: 1rem; display: block; }
+    .colourIcons a { display: inline-flex; }
+    .colourIcons a:hover { text-decoration: none; }
     .cellNum { font-variant-numeric: tabular-nums; }
     .cellPct { color: var(--muted); font-size: 0.75rem; margin-left: 0.125rem; }
     .cellMuted { color: rgba(232,238,246,0.35); }
@@ -289,6 +292,12 @@ function scryNoncreatureSupport(t) {
   return `https://scryfall.com/search?as=grid&order=name&q=${q}&unique=cards`;
 }
 
+function scryCreatureTypeWithColour(t, c) {
+  const extra = (c === "C") ? "id=c" : `id>=${c}`;
+  const q = encodeURIComponent(`t:creature t:${t} in:paper -is:funny ${extra}`);
+  return `https://scryfall.com/search?as=grid&order=name&q=${q}&unique=cards`;
+}
+
 function pctStr(p) {
   return (p * 100).toFixed(1) + "%";
 }
@@ -298,7 +307,11 @@ function colourIconsHTML(row) {
   for (const c of MANA) {
     const cnt = row.colourCounts[c] || 0;
     if (cnt > 0) {
-      icons.push(`<img src="./assets/mana/${c}.svg" alt="${c}" title="${c}" />`);
+      icons.push(`
+        <a href="${scryCreatureTypeWithColour(row.type, c)}" target="_blank" rel="noreferrer" title="Show ${row.type} creatures with the colour identity ${c}">
+          <img src="./assets/mana/${c}.svg" alt="${c}" />
+        </a>
+      `);
     }
   }
   return `<div class="colourIcons">${icons.join("") || "—"}</div>`;
