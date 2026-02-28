@@ -266,13 +266,13 @@ def build_html():
 <script>
 const MANA = ["W","U","B","R","G","C"];
 
-function scryNoncreatureSupport(t) {
-  const q = encodeURIComponent(`o:${t} -t:${t}`);
+function scryCreatureType(t) {
+  const q = encodeURIComponent(`t:creature t:${t} -is:funny`);
   return `https://scryfall.com/search?as=grid&order=name&q=${q}`;
 }
 
-function scryCreatureType(t) {
-  const q = encodeURIComponent(`t:creature t:${t}`);
+function scryNoncreatureSupport(t) {
+  const q = encodeURIComponent(`o:${t} -t:${t} -is:funny`);
   return `https://scryfall.com/search?as=grid&order=name&q=${q}`;
 }
 
