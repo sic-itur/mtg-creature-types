@@ -153,7 +153,8 @@ def build_html():
     :root {
       --bg: #111318;
       --panel: #171a22;
-      --panel2: #1c202b;
+      --row: #1a1e25;
+      --rowHighlight: #1c202b;
       --border: #2a2f3b;
       --text: #f2f2f2;
       --muted: #aab1bf;
@@ -161,30 +162,28 @@ def build_html():
       --shadow: rgba(0,0,0,0.35);
       --radius: 0.75rem;
     }
+
+    html::-webkit-scrollbar { width: 0.875rem; }
+    html::-webkit-scrollbar-track { background: transparent; }
+    html::-webkit-scrollbar-thumb {
+      background: #394154;
+      border-radius: 999px;
+      border: 3px solid transparent;
+      background-clip: content-box;
+    }
+
     body {
-      margin: 1.125rem;
+      margin: 1.125rem 0.25rem 1.125rem 1.125rem;
       background: var(--bg);
       color: var(--text);
       font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
     }
-    html::-webkit-scrollbar {
-    width: 14px;
-    }
-    html::-webkit-scrollbar-track {
-        background: transparent;
-    }
-    html::-webkit-scrollbar-thumb {
-        background: #394154;
-        border-radius: 999px;
-        border: 3px solid transparent;
-        background-clip: content-box;
-    }
+
     h1 { font-size: 1.35rem; margin: 0 0 0.375rem; }
     .sub { font-size: 0.9rem; color: var(--muted); margin: 0 0 1rem; line-height: 1.4; }
-    .bar {
-      display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;
-      margin: 1.125rem 0 0.75rem;
-    }
+
+    .bar { display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap; margin: 1.125rem 0 0.75rem; }
+
     input {
       background: var(--panel);
       border: 1px solid var(--border);
@@ -195,15 +194,23 @@ def build_html():
       outline: none;
     }
     input::placeholder { color: rgba(232,238,246,0.45); }
+
     .card {
-      background: rgba(255,255,255,0.04);
+      background: var(--row);
       border: 1px solid var(--border);
       border-radius: var(--radius);
       overflow: hidden;
       box-shadow: 0 0.875rem 2.5rem var(--shadow);
       margin: 1.5rem 0;
     }
+
+    .tableWrap{
+      overflow-x:auto;
+      -webkit-overflow-scrolling:touch;
+    }
+
     table { width: 100%; border-collapse: collapse; }
+
     thead th {
       background: var(--panel);
       backdrop-filter: blur(0.5rem);
@@ -217,32 +224,60 @@ def build_html():
       white-space: nowrap;
       vertical-align: top;
     }
+
+    .tableWrap thead th { position: sticky; top: 0; z-index: 2; }
+    .tableWrap thead th:first-child { z-index: 4; }
+
     tbody td {
-      background: color-mix(in srgb, var(--panel2) 40%, transparent);
+      background: var(--row);
       border-bottom: 1px solid var(--border);
       padding: 0.625rem 0.625rem;
       vertical-align: middle;
       font-size: 0.875rem;
     }
-    tbody tr:hover { background: var(--panel2); }
-    tbody tr:last-child td { border-bottom: 0; }
-    .num { font-variant-numeric: tabular-nums; }
+
+    .tableWrap th:first-child,
+    .tableWrap td:first-child {
+      position: sticky;
+      left: 0;
+      background-clip: padding-box;
+    }
+
+    .tableWrap th:first-child {
+      z-index: 4;               /* above body sticky cells */
+      background: var(--panel);
+    }
+
+    .tableWrap td:first-child {
+      z-index: 3;
+      background: var(--row);
+    }
+    
+    tbody tr:hover td { background: var(--rowHighlight); }
+    .tableWrap tbody tr:hover td:first-child { background: var(--rowHighlight); }
+    
     a { color: var(--link); text-decoration: none; }
     a:hover { text-decoration: underline; }
 
+    .num, .cellNum { font-variant-numeric: tabular-nums; }
     .type a { font-weight: 650; }
+
     .lucide { width: 1rem; }
-    th.mana .manaLabel { display: inline-flex; align-items: center; gap: 0.4rem; white-space: nowrap; }
+
+    th.mana .manaLabel { display: inline-flex; align-items: center; gap: 0.5rem; white-space: nowrap; }
     th.mana .manaHeadIcon { width: 1rem; height: 1rem; display: block; flex: 0 0 auto; }
+    th.mana .manaText { display: inline-flex; align-items: center; gap: 0.15rem; }
+    th.mana .manaLabel .sortHint { margin-top: 0.09375rem; }
+
     thead th.noSort { cursor: default; }
+
     .colourIcons { display: flex; gap: 0.375rem; align-items: center; }
     .colourIcons img { width: 1rem; height: 1rem; display: block; }
-    .colourIcons a { display: inline-flex; }
-    .colourIcons a:hover { text-decoration: none; }
-    .cellNum { font-variant-numeric: tabular-nums; }
+
     .cellPct { color: var(--muted); font-size: 0.75rem; margin-left: 0.125rem; }
     .cellMuted { color: rgba(232,238,246,0.35); }
     .sortHint { color: rgba(232,238,246,0.35); font-size: 0.625rem; margin-left: 0.375rem; }
+
     .footer { color: var(--muted); font-size: 0.75rem; line-height: 1.45; }
   </style>
 </head>
@@ -257,24 +292,26 @@ def build_html():
 </div>
 
 <div class="card">
-  <table>
-    <thead>
-      <tr>
-        <th data-key="type">Creature Type <span class="sortHint" id="sh_type"></span></th>
-        <th data-key="count" class="num">Count <span class="sortHint" id="sh_count"></span></th>
-        <th data-key="colours">Colour Identities <span class="sortHint" id="sh_colours"></span></th>
-        <th data-key="W" class="mana"><span class="manaLabel"><img class="manaHeadIcon" src="./assets/mana/W.svg" alt="W" title="White">White</span></th>
-        <th data-key="U" class="mana"><span class="manaLabel"><img class="manaHeadIcon" src="./assets/mana/U.svg" alt="U" title="Blue">Blue</span></th>
-        <th data-key="B" class="mana"><span class="manaLabel"><img class="manaHeadIcon" src="./assets/mana/B.svg" alt="B" title="Black">Black</span></th>
-        <th data-key="R" class="mana"><span class="manaLabel"><img class="manaHeadIcon" src="./assets/mana/R.svg" alt="R" title="Red">Red</span></th>
-        <th data-key="G" class="mana"><span class="manaLabel"><img class="manaHeadIcon" src="./assets/mana/G.svg" alt="G" title="Green">Green</span></th>
-        <th data-key="C" class="mana"><span class="manaLabel"><img class="manaHeadIcon" src="./assets/mana/C.svg" alt="C" title="Colourless">Colourless</span></th>
-        <th data-key="legendary" class="num">Legendaries<span class="sortHint" id="sh_legendary"></span></th>
-        <th class="noSort">Support Cards</th>
-      </tr>
-    </thead>
-    <tbody id="tbody"></tbody>
-  </table>
+  <div class="tableWrap">
+    <table>
+      <thead>
+        <tr>
+          <th data-key="type">Creature Type <span class="sortHint" id="sh_type"></span></th>
+          <th data-key="count" class="num">Count <span class="sortHint" id="sh_count"></span></th>
+          <th data-key="colours">Colour Identities <span class="sortHint" id="sh_colours"></span></th>
+          <th data-key="W" class="mana"><span class="manaLabel"><img class="manaHeadIcon" src="./assets/mana/W.svg" alt="W" title="White"><span class="manaText">White<span class="sortHint" id="sh_W"></span></span></span></th>
+          <th data-key="U" class="mana"><span class="manaLabel"><img class="manaHeadIcon" src="./assets/mana/U.svg" alt="U" title="Blue"><span class="manaText">Blue<span class="sortHint" id="sh_U"></span></span></span></th>
+          <th data-key="B" class="mana"><span class="manaLabel"><img class="manaHeadIcon" src="./assets/mana/B.svg" alt="B" title="Black"><span class="manaText">Black<span class="sortHint" id="sh_B"></span></span></span></th>
+          <th data-key="R" class="mana"><span class="manaLabel"><img class="manaHeadIcon" src="./assets/mana/R.svg" alt="R" title="Red"><span class="manaText">Red<span class="sortHint" id="sh_R"></span></span></span></th>
+          <th data-key="G" class="mana"><span class="manaLabel"><img class="manaHeadIcon" src="./assets/mana/G.svg" alt="G" title="Green"><span class="manaText">Green<span class="sortHint" id="sh_G"></span></span></span></th>
+          <th data-key="C" class="mana"><span class="manaLabel"><img class="manaHeadIcon" src="./assets/mana/C.svg" alt="C" title="Colourless"><span class="manaText">Colourless<span class="sortHint" id="sh_C"></span></span></span></th>
+          <th data-key="legendary" class="num">Legendaries<span class="sortHint" id="sh_legendary"></span></th>
+          <th class="noSort">Support Cards</th>
+        </tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
 </div>
 
 <div class="footer" id="footer"></div>
@@ -298,6 +335,11 @@ function scryCreatureTypeWithColour(t, c) {
   return `https://scryfall.com/search?as=grid&order=name&q=${q}&unique=cards`;
 }
 
+function scryLegendaryCreatureType(t) {
+  const q = encodeURIComponent(`t:creature t:${t} t:legendary in:paper -is:funny`);
+  return `https://scryfall.com/search?as=grid&order=name&q=${q}&unique=cards`;
+}
+
 function pctStr(p) {
   return (p * 100).toFixed(1) + "%";
 }
@@ -307,11 +349,7 @@ function colourIconsHTML(row) {
   for (const c of MANA) {
     const cnt = row.colourCounts[c] || 0;
     if (cnt > 0) {
-      icons.push(`
-        <a href="${scryCreatureTypeWithColour(row.type, c)}" target="_blank" rel="noreferrer" title="Show ${row.type} creatures with the colour identity ${c}">
-          <img src="./assets/mana/${c}.svg" alt="${c}" />
-        </a>
-      `);
+      icons.push(`<img src="./assets/mana/${c}.svg" alt="${c}" title="${c}" />`);
     }
   }
   return `<div class="colourIcons">${icons.join("") || "—"}</div>`;
@@ -321,7 +359,11 @@ function colourCellHTML(row, c) {
   const cnt = row.colourCounts[c] || 0;
   const p = row.colourPerc[c] || 0;
   if (!cnt) return `<span class="cellMuted">—</span>`;
-  return `<span class="cellNum">${cnt}</span> <span class="cellPct">${pctStr(p)}</span>`;
+
+  return `
+    <a class="cellLink" href="${scryCreatureTypeWithColour(row.type, c)}" target="_blank" rel="noreferrer">${cnt}</a>
+    <span class="cellPct">${pctStr(p)}</span>
+  `;
 }
 
 function render(rows) {
@@ -351,7 +393,7 @@ function render(rows) {
       <td class="num">${colourCellHTML(row, "G")}</td>
       <td class="num">${colourCellHTML(row, "C")}</td>
 
-      <td class="num">${row.legendary}</td>
+      <td class="num"><a href="${scryLegendaryCreatureType(row.type)}" target="_blank" rel="noreferrer">${row.legendary}</a></td>
       <td><a href="${scryNoncreatureSupport(row.type)}" target="_blank" rel="noreferrer"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-square-arrow-out-up-right-icon lucide-square-arrow-out-up-right"><path d="M21 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h6"/><path d="m21 3-9 9"/><path d="M15 3h6v6"/></svg></a></td>
     `;
     tbody.appendChild(tr);
