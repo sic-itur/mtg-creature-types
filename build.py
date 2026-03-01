@@ -162,17 +162,8 @@ def build_html():
       --radius: 0.75rem;
     }
 
-    html::-webkit-scrollbar { width: 0.875rem; }
-    html::-webkit-scrollbar-track { background: transparent; }
-    html::-webkit-scrollbar-thumb {
-      background: #394154;
-      border-radius: 999px;
-      border: 3px solid transparent;
-      background-clip: content-box;
-    }
-
     body {
-      margin: 0 0.25rem 1.125rem 1.125rem;
+      margin: 0 1.125rem 1.125rem;
       background: var(--bg);
       color: var(--text);
       font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
@@ -244,6 +235,10 @@ def build_html():
       font-size: 0.875rem;
     }
 
+    tbody tr:hover td { background: var(--rowHighlight); }
+
+    tbody tr:last-child td { border-bottom: 0; }
+
     .tableWrap th:first-child,
     .tableWrap td:first-child {
       position: sticky;
@@ -251,17 +246,8 @@ def build_html():
       background-clip: padding-box;
     }
 
-    .tableWrap th:first-child {
-      z-index: 4;               /* above body sticky cells */
-      background: var(--panel);
-    }
-
-    .tableWrap td:first-child {
-      z-index: 3;
-      background: var(--row);
-    }
-    
-    tbody tr:hover td { background: var(--rowHighlight); }
+    .tableWrap th:first-child { z-index: 4; background: var(--panel); }
+    .tableWrap td:first-child { z-index: 3; background: var(--row); }
     .tableWrap tbody tr:hover td:first-child { background: var(--rowHighlight); }
     
     a { color: var(--link); text-decoration: none; }
