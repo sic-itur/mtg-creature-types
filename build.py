@@ -159,7 +159,6 @@ def build_html():
       --text: #f2f2f2;
       --muted: #aab1bf;
       --link: #9ccfff;
-      --shadow: rgba(0,0,0,0.35);
       --radius: 0.75rem;
     }
 
@@ -173,7 +172,7 @@ def build_html():
     }
 
     body {
-      margin: 1.125rem 0.25rem 1.125rem 1.125rem;
+      margin: 0 0.25rem 1.125rem 1.125rem;
       background: var(--bg);
       color: var(--text);
       font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
@@ -181,6 +180,16 @@ def build_html():
 
     h1 { font-size: 1.35rem; margin: 0 0 0.375rem; }
     .sub { font-size: 0.9rem; color: var(--muted); margin: 0 0 1rem; line-height: 1.4; }
+
+    .header {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      background: var(--bg);
+      padding: 1.25rem 0 0.75rem 0;
+      margin-bottom: 1.5rem;
+      border-bottom: 1px solid var(--border);
+    }
 
     .bar { display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap; margin: 1.125rem 0 0.75rem; }
 
@@ -200,7 +209,6 @@ def build_html():
       border: 1px solid var(--border);
       border-radius: var(--radius);
       overflow: hidden;
-      box-shadow: 0 0.875rem 2.5rem var(--shadow);
       margin: 1.5rem 0;
     }
 
@@ -282,13 +290,15 @@ def build_html():
   </style>
 </head>
 <body>
-<h1>MTG Creature Types Index</h1>
-<p class="sub">
-  Auto-updated daily from Scryfall bulk data. Inspired by Smileylich’s <a href="https://www.smileylich.com/mtg/magocracy/Magocracy_C1.html">Creature Type List</a>.
-</p>
+<div class="header">
+  <h1>MTG Creature Types Index</h1>
+  <p class="sub">
+    Auto-updated daily from Scryfall bulk data. Inspired by Smileylich’s <a href="https://www.smileylich.com/mtg/magocracy/Magocracy_C1.html">Creature Type List</a>.
+  </p>
 
-<div class="bar">
-  <input id="filter" placeholder="Filter creature types… (e.g. Human, Elf, Zombie)" />
+  <div class="bar">
+    <input id="filter" placeholder="Filter creature types… (e.g. Human, Elf, Zombie)" />
+  </div>
 </div>
 
 <div class="card">
